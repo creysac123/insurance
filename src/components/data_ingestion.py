@@ -31,7 +31,7 @@ class DataIngestion:
         logging.info("Entered the data ingestion method or component")
         try:
             # Read the dataset
-            df = pd.read_excel('notebook\data\insurance_data.xlsx')
+            df = pd.read_csv('notebook\data\sampled_data.csv')
             logging.info('Read the dataset as dataframe')
 
             # Preprocessing steps as before
@@ -42,15 +42,15 @@ class DataIngestion:
                                    'exercise_frequency', 'occupation', 'coverage_level']
             df[categorical_columns] = df[categorical_columns].astype('category')
 
-            df['age'].fillna(df['age'].median(), inplace=True)
-            df['children'].fillna(round(df['children'].median()), inplace=True)
-            df['gender'].fillna(df['gender'].mode()[0], inplace=True)
-            df['occupation'].fillna(df['occupation'].mode()[0], inplace=True)
+            df['age'] = df['age'].fillna(df['age'].median())
+            df['gender'] = df['gender'].fillna(df['gender'].mode()[0])
+            df['children'] = df['children'].fillna(round(df['children'].median()))
+            df['occupation'] = df['occupation'].fillna(df['occupation'].mode()[0])
 
             for col in ['medical_history', 'family_medical_history']:
                 if 'No history' not in df[col].cat.categories:
                     df[col] = df[col].cat.add_categories('No history')
-                df[col].fillna('No history', inplace=True)
+                df[col] = df[col].fillna('No history')
 
             X = df.drop('charges', axis=1)
             y = df['charges']
@@ -122,13 +122,34 @@ class DataIngestion:
 
 
 if __name__ == "__main__":
-    obj = DataIngestion()
-    train_data, test_data, preprocessor_path = obj.initiate_data_ingestion()
+    try:
+        # Data Ingestion
+        print("Starting data ingestion...")
+        obj = DataIngestion()
+        train_data, test_data, preprocessor_path = obj.initiate_data_ingestion()
+        print("Data ingestion completed.")
+
+        # Data Transformation (consider running this in batches or using GPU-accelerated methods)
+        print("Starting data transformation...")
+        data_transformation = DataTransformation()
+        train_arr, test_arr, _ = data_transformation.initiate_data_transformation(train_data, test_data)
+        print("Data transformation completed.")
+
+        # Free up memory by explicitly deleting unnecessary objects and calling garbage collection
+        del train_data, test_data
+        import gc
+        gc.collect()
+
+        # Model Training
+        print("Starting model training...")
+        modeltrainer = ModelTrainer()
+
+        # Optionally, you can use checkpointing or batch model training if needed
+        r2 = modeltrainer.initiate_model_trainer(train_arr, test_arr)
+        print(f"Model training completed with R2 score: {r2}")
 
 
-    data_transformation=DataTransformation()
-    train_arr,test_arr,_=data_transformation.initiate_data_transformation(train_data,test_data)
-    
-    
-    modeltrainer=ModelTrainer()
-    print(modeltrainer.initiate_model_trainer(train_arr,test_arr))
+
+    except CustomException as e:
+        print(f"An error occurred: {e}")
+

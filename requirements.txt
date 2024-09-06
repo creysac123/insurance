@@ -2,7 +2,7 @@ Flask
 pandas
 numpy
 scikit-learn
-xgboost
+xgboost 
 joblib
 openpyxl
 seaborn
@@ -10,5 +10,7 @@ scipy
 ipykernel
 dill
 
--e .
+
+
+#-e .
 
