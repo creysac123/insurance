@@ -1,14 +1,10 @@
-import warnings
-warnings.filterwarnings('ignore', category=FutureWarning)
-
 import os
 import sys
 from dataclasses import dataclass
 
 import numpy as np
 from sklearn.linear_model import HuberRegressor
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+from sklearn.metrics import root_mean_squared_error, mean_absolute_error, r2_score
 from sklearn.model_selection import GridSearchCV
 
 from src.exception import CustomException
@@ -41,12 +37,6 @@ class ModelTrainer:
             logging.info(f"X_train shape: {X_train.shape}, y_train shape: {y_train.shape}")
             logging.info(f"X_test shape: {X_test.shape}, y_test shape: {y_test.shape}")
 
-            # Scale the data
-            logging.info("Scaling the data using StandardScaler")
-            scaler = StandardScaler()
-            X_train_scaled = scaler.fit_transform(X_train)
-            X_test_scaled = scaler.transform(X_test)
-
             # Define the parameter grid for HuberRegressor
             param_grid = {
                 'epsilon': [1.1, 1.35, 1.5],  # Epsilon parameter to control robustness
@@ -65,7 +55,7 @@ class ModelTrainer:
 
             # Start model training
             logging.info("Fitting the HuberRegressor model on the training data")
-            grid_search.fit(X_train_scaled, y_train)
+            grid_search.fit(X_train, y_train)  # No scaling here, as it's done in data ingestion
 
             logging.info("GridSearchCV fitting complete")
 
@@ -82,11 +72,11 @@ class ModelTrainer:
 
             # Make predictions
             logging.info("Making predictions on the test data")
-            y_pred = best_huber_model.predict(X_test_scaled)
+            y_pred = best_huber_model.predict(X_test)
 
             # Evaluate the model
             logging.info("Evaluating the model with RMSE, MAE, R², and MAPE")
-            rmse = mean_squared_error(y_test, y_pred, squared=False)
+            rmse = root_mean_squared_error(y_test, y_pred)
             mae = mean_absolute_error(y_test, y_pred)
             r2 = r2_score(y_test, y_pred)
             mape = np.mean(np.abs((y_test - y_pred) / y_test)) * 100

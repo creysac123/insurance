@@ -3,7 +3,7 @@ import sys
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.compose import ColumnTransformer
 from dataclasses import dataclass
 from src.exception import CustomException
@@ -12,7 +12,6 @@ from src.utils import save_object  # Importing save_object function
 
 from src.components.data_transformation import DataTransformation
 from src.components.data_transformation import DataTransformationConfig
-
 from src.components.model_trainer import ModelTrainerConfig
 from src.components.model_trainer import ModelTrainer
 
@@ -31,7 +30,7 @@ class DataIngestion:
         logging.info("Entered the data ingestion method or component")
         try:
             # Read the dataset
-            df = pd.read_csv('notebook\data\sampled_data.csv')
+            df = pd.read_csv('notebook/data/sampled_data.csv')
             logging.info('Read the dataset as dataframe')
 
             # Preprocessing steps as before
@@ -59,39 +58,30 @@ class DataIngestion:
                                     'exercise_frequency', 'occupation', 'coverage_level']
             numerical_features = ['age', 'bmi', 'children']
 
-            # Create and fit preprocessor
+            # Create and fit preprocessor with scaling added
             preprocessor = ColumnTransformer(
                 transformers=[
-                    ('num', 'passthrough', numerical_features),
+                    ('num', StandardScaler(), numerical_features),  # Adding scaling to numerical features
                     ('cat', OneHotEncoder(handle_unknown='ignore'), categorical_features)
                 ]
             )
             preprocessor.fit(X)  # Fit preprocessor on the data
 
-            # Save the preprocessor object using save_object
-            save_object(
-                file_path=self.ingestion_config.preprocessor_obj_file_path,
-                obj=preprocessor
-            )
-
-            # Encoding steps and correlation filtering as before...
+            # Encode the features
             X_encoded = preprocessor.transform(X)
             encoded_feature_names = (numerical_features +
                                      list(preprocessor.named_transformers_['cat'].get_feature_names_out(categorical_features)))
             encoded_df = pd.DataFrame(X_encoded, columns=encoded_feature_names)
             encoded_df['charges'] = y.values
 
-            correlation_matrix = encoded_df.corr()
-            df_encoded = pd.get_dummies(df, columns=categorical_features, drop_first=True)
-            correlation_matrix = df_encoded.corr()
-            target_variable = 'charges'
-            threshold = 0.05
-            relevant_features = correlation_matrix[target_variable][(correlation_matrix[target_variable] > threshold) |
-                                                                    (correlation_matrix[target_variable] < -threshold)].index
-            df_relevant = df_encoded[relevant_features]
-            if target_variable not in df_relevant.columns:
-                df_relevant[target_variable] = df_encoded[target_variable]
+            # Log the number of features in the encoded data
+            num_features = len(encoded_feature_names)
+            logging.info(f"Number of features after encoding: {num_features}")
 
+            # Remove correlation-based filtering
+            df_relevant = encoded_df
+
+            # Remove outliers
             Q1 = df['charges'].quantile(0.25)
             Q3 = df['charges'].quantile(0.75)
             IQR = Q3 - Q1
@@ -109,6 +99,10 @@ class DataIngestion:
 
             train_set.to_csv(self.ingestion_config.train_data_path, index=False, header=True)
             test_set.to_csv(self.ingestion_config.test_data_path, index=False, header=True)
+
+            # Save preprocessor object as pkl
+            logging.info("Saving preprocessor object")
+            save_object(self.ingestion_config.preprocessor_obj_file_path, preprocessor)
 
             logging.info("Ingestion of the data is completed")
 
@@ -148,8 +142,5 @@ if __name__ == "__main__":
         r2 = modeltrainer.initiate_model_trainer(train_arr, test_arr)
         print(f"Model training completed with R2 score: {r2}")
 
-
-
     except CustomException as e:
         print(f"An error occurred: {e}")
-

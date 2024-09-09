@@ -1,11 +1,10 @@
 import sys
 from dataclasses import dataclass
-import numpy as np 
+import numpy as np
 import pandas as pd
 import os
 from src.exception import CustomException
 from src.logger import logging
-
 
 @dataclass
 class DataTransformationConfig:
@@ -33,7 +32,12 @@ class DataTransformation:
             input_feature_test_df = test_df.drop(columns=[target_column_name], axis=1)
             target_feature_test_df = test_df[target_column_name]
 
-            # Since no further transformation is needed, use the data as-is
+            # Potential additional steps:
+            # - Outlier detection and removal
+            # - Feature scaling or normalization
+            # - Feature engineering or creation of interaction features
+
+            # Prepare arrays for model training
             train_arr = np.c_[input_feature_train_df, np.array(target_feature_train_df)]
             test_arr = np.c_[input_feature_test_df, np.array(target_feature_test_df)]
 
