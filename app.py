@@ -1,49 +1,57 @@
-from flask import Flask, request, render_template
-import numpy as np
+import streamlit as st
 import pandas as pd
 from src.pipeline.predict_pipeline import CustomData, PredictPipeline
 
-application = Flask(__name__)
-app = application
+# Title of the application
+st.title("Insurance Charges Prediction")
 
-## Route for the home page
-@app.route('/')
-def index():
-    return render_template('index.html') 
+# Sidebar form for user input
+with st.form(key='insurance_form'):
+    st.header("Insurance Charge Prediction Form")
 
-@app.route('/predictdata', methods=['GET', 'POST'])
-def predict_datapoint():
-    if request.method == 'GET':
-        return render_template('home.html')
-    else:
-        # Get form data and create a CustomData instance
-        data = CustomData(
-            age=float(request.form.get('age')),
-            gender=request.form.get('gender'),
-            bmi=float(request.form.get('bmi')),
-            children=int(request.form.get('children')),
-            smoker=request.form.get('smoker'),
-            region=request.form.get('region'),
-            medical_history=request.form.get('medical_history'),
-            family_medical_history=request.form.get('family_medical_history'),
-            exercise_frequency=request.form.get('exercise_frequency'),
-            occupation=request.form.get('occupation'),
-            coverage_level=request.form.get('coverage_level')
-        )
+    # Input fields
+    gender = st.selectbox("Gender", options=["Male", "Female"])
+    age = st.number_input("Age", min_value=0, max_value=120, step=1)
+    bmi = st.number_input("BMI", min_value=10.0, max_value=60.0, step=0.1)
+    children = st.number_input("Number of Children", min_value=0, max_value=10, step=1)
+    smoker = st.selectbox("Smoker", options=["Yes", "No"])
+    region = st.selectbox("Region", options=["Northeast", "Northwest", "Southeast", "Southwest"])
+    exercise_frequency = st.selectbox("Exercise Frequency", options=["Never", "Rarely", "Occasionally", "Frequently"])
+    occupation = st.selectbox("Occupation", options=["Blue collar", "Student", "White collar", "Unemployed"])
+    coverage_level = st.selectbox("Coverage Level", options=["Basic", "Standard", "Premium"])
+    medical_history = st.selectbox("Medical History", options=["No history", "Diabetes", "High blood pressure", "Heart disease"])
+    family_medical_history = st.selectbox("Family Medical History", options=["No history", "Diabetes", "High blood pressure", "Heart disease"])
 
-        # Convert the form data to a DataFrame
-        pred_df = data.get_data_as_data_frame()
-        print(pred_df)
-        print("Before Prediction")
+    # Submit button
+    submit_button = st.form_submit_button(label="Predict Insurance Charges")
 
-        # Create a PredictPipeline instance and make a prediction
-        predict_pipeline = PredictPipeline()
-        print("Mid Prediction")
-        results = predict_pipeline.predict(pred_df)
-        print("After Prediction")
+# On form submission, process data and predict
+if submit_button:
+    # Create a CustomData instance
+    data = CustomData(
+        age=age,
+        gender=gender,
+        bmi=bmi,
+        children=children,
+        smoker=smoker,
+        region=region,
+        medical_history=medical_history,
+        family_medical_history=family_medical_history,
+        exercise_frequency=exercise_frequency,
+        occupation=occupation,
+        coverage_level=coverage_level
+    )
 
-        # Return the results in the home page
-        return render_template('home.html', results=f'Estimated Insurance Charges: ${results[0]:.2f}')
+    # Convert data into a DataFrame
+    pred_df = data.get_data_as_data_frame()
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0",port=80)
+    # Display the input data
+    st.subheader("Input Data")
+    st.write(pred_df)
+
+    # Create a PredictPipeline instance
+    predict_pipeline = PredictPipeline()
+    results = predict_pipeline.predict(pred_df)
+
+    # Display the prediction results
+    st.success(f"The predicted insurance charges are: ${results[0]:.2f}")

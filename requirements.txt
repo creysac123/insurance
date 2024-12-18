@@ -9,7 +9,7 @@ seaborn
 scipy
 ipykernel
 dill
-
+streamlit
 
 
 #-e .
