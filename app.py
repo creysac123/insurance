@@ -10,17 +10,17 @@ with st.form(key='insurance_form'):
     st.header("Insurance Charge Prediction Form")
 
     # Input fields
-    gender = st.selectbox("Gender", options=["Male", "Female"])
-    age = st.number_input("Age", min_value=0, max_value=120, step=1)
-    bmi = st.number_input("BMI", min_value=10.0, max_value=60.0, step=0.1)
-    children = st.number_input("Number of Children", min_value=0, max_value=10, step=1)
-    smoker = st.selectbox("Smoker", options=["Yes", "No"])
-    region = st.selectbox("Region", options=["Northeast", "Northwest", "Southeast", "Southwest"])
-    exercise_frequency = st.selectbox("Exercise Frequency", options=["Never", "Rarely", "Occasionally", "Frequently"])
-    occupation = st.selectbox("Occupation", options=["Blue collar", "Student", "White collar", "Unemployed"])
-    coverage_level = st.selectbox("Coverage Level", options=["Basic", "Standard", "Premium"])
-    medical_history = st.selectbox("Medical History", options=["No history", "Diabetes", "High blood pressure", "Heart disease"])
-    family_medical_history = st.selectbox("Family Medical History", options=["No history", "Diabetes", "High blood pressure", "Heart disease"])
+    gender = st.radio("Gender", options=["Male", "Female"])
+    age = st.number_input("Age", min_value=0, max_value=120, step=1, format="%d", placeholder="Enter your age")
+    bmi = st.number_input("BMI", min_value=10.0, max_value=60.0, step=0.1, format="%.1f", placeholder="Enter your BMI")
+    children = st.number_input("Number of Children", min_value=0, max_value=10, step=1, format="%d", placeholder="Enter number of children")
+    smoker = st.radio("Smoker", options=["Yes", "No"])
+    region = st.radio("Region", options=["Northeast", "Northwest", "Southeast", "Southwest"])
+    exercise_frequency = st.radio("Exercise Frequency", options=["Never", "Rarely", "Occasionally", "Frequently"])
+    occupation = st.radio("Occupation", options=["Blue collar", "Student", "White collar", "Unemployed"])
+    coverage_level = st.radio("Coverage Level", options=["Basic", "Standard", "Premium"])
+    medical_history = st.radio("Medical History", options=["No history", "Diabetes", "High blood pressure", "Heart disease"])
+    family_medical_history = st.radio("Family Medical History", options=["No history", "Diabetes", "High blood pressure", "Heart disease"])
 
     # Submit button
     submit_button = st.form_submit_button(label="Predict Insurance Charges")
