@@ -11,9 +11,9 @@ with st.form(key='insurance_form'):
 
     # Input fields
     gender = st.radio("Gender", options=["Male", "Female"])
-    age = st.number_input("Age", min_value=0, max_value=120, step=1, format="%d", placeholder="Enter your age")
-    bmi = st.number_input("BMI", min_value=10.0, max_value=60.0, step=0.1, format="%.1f", placeholder="Enter your BMI")
-    children = st.number_input("Number of Children", min_value=0, max_value=10, step=1, format="%d", placeholder="Enter number of children")
+    age = st.text_input("Age", placeholder="Enter your age")
+    bmi = st.text_input("BMI", placeholder="Enter your BMI (e.g., 25.5)")
+    children = st.text_input("Number of Children", placeholder="Enter number of children")
     smoker = st.radio("Smoker", options=["Yes", "No"])
     region = st.radio("Region", options=["Northeast", "Northwest", "Southeast", "Southwest"])
     exercise_frequency = st.radio("Exercise Frequency", options=["Never", "Rarely", "Occasionally", "Frequently"])
@@ -27,31 +27,40 @@ with st.form(key='insurance_form'):
 
 # On form submission, process data and predict
 if submit_button:
-    # Create a CustomData instance
-    data = CustomData(
-        age=age,
-        gender=gender,
-        bmi=bmi,
-        children=children,
-        smoker=smoker,
-        region=region,
-        medical_history=medical_history,
-        family_medical_history=family_medical_history,
-        exercise_frequency=exercise_frequency,
-        occupation=occupation,
-        coverage_level=coverage_level
-    )
+    try:
+        # Ensure numeric inputs are valid
+        age = float(age)
+        bmi = float(bmi)
+        children = int(children)
 
-    # Convert data into a DataFrame
-    pred_df = data.get_data_as_data_frame()
+        # Create a CustomData instance
+        data = CustomData(
+            age=age,
+            gender=gender,
+            bmi=bmi,
+            children=children,
+            smoker=smoker,
+            region=region,
+            medical_history=medical_history,
+            family_medical_history=family_medical_history,
+            exercise_frequency=exercise_frequency,
+            occupation=occupation,
+            coverage_level=coverage_level
+        )
 
-    # Display the input data
-    st.subheader("Input Data")
-    st.write(pred_df)
+        # Convert data into a DataFrame
+        pred_df = data.get_data_as_data_frame()
 
-    # Create a PredictPipeline instance
-    predict_pipeline = PredictPipeline()
-    results = predict_pipeline.predict(pred_df)
+        # Display the input data
+        st.subheader("Input Data")
+        st.write(pred_df)
 
-    # Display the prediction results
-    st.success(f"The predicted insurance charges are: ${results[0]:.2f}")
+        # Create a PredictPipeline instance
+        predict_pipeline = PredictPipeline()
+        results = predict_pipeline.predict(pred_df)
+
+        # Display the prediction results
+        st.success(f"The predicted insurance charges are: ${results[0]:.2f}")
+
+    except ValueError:
+        st.error("Please enter valid numeric values for Age, BMI, and Number of Children.")
